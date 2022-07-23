@@ -4,23 +4,26 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from mydatasets import load_seizure_dataset
+from mydatasets import load_dataset
 from utils import train, evaluate
 from plots import plot_learning_curves, plot_confusion_matrix
 from mymodels import MyMLP, MyCNN
+import shap
+import matplotlib.pyplot as plt
+from focal_loss import FocalLoss, reweight
 
 #TODO: https://pytorch.org/docs/stable/notes/windows.html#multiprocessing-error-without-if-clause-protection
 
 # Set a correct path to the seizure data file you downloaded
-PATH_FILE = "../data/compiled_FC_70.csv"
+PATH_FILE = "../data/compiled_FC_75.csv"
 
 # Path for saving model
 PATH_OUTPUT = "../output/"
 os.makedirs(PATH_OUTPUT, exist_ok=True)
 
 # Some parameters
-MODEL_TYPE = 'MLP'  # TODO: Change this to 'MLP' or 'CNN'
-NUM_EPOCHS = 100
+MODEL_TYPE = 'CNN'  # TODO: Change this to 'MLP' or 'CNN'
+NUM_EPOCHS = 500
 BATCH_SIZE = 512
 USE_CUDA = True  # Set 'True' if you want to use GPU
 NUM_WORKERS = 0  # Number of threads used by DataLoader. You can adjust this according to your machine spec.
@@ -31,7 +34,7 @@ if device.type == "cuda":
 	torch.backends.cudnn.deterministic = True
 	torch.backends.cudnn.benchmark = False
 
-train_dataset, valid_dataset, test_dataset = load_seizure_dataset(PATH_FILE, MODEL_TYPE)
+train_dataset, valid_dataset, test_dataset, features, test_data = load_dataset(PATH_FILE, MODEL_TYPE)
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
 valid_loader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
@@ -47,8 +50,11 @@ elif MODEL_TYPE == 'CNN':
 else:
 	raise AssertionError("Wrong Model Type!")
 
+cls_num_list = [18930, 5297, 22783, 14090, 10341]
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
+#criterion = FocalLoss(weight=reweight(cls_num_list), gamma=1)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay = 0.001)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
@@ -80,3 +86,18 @@ test_loss, test_accuracy, test_results = evaluate(best_model, device, test_loade
 
 class_names = ['Awake', 'N1', 'N2', 'N3', 'REM']
 plot_confusion_matrix(test_results, class_names)
+
+# test_data_new = []
+
+# for i, (inp, target) in enumerate(test_loader):
+#   test_data_new.append(inp)
+
+# #SHAP computation
+
+# tests = torch.cat(test_data_new, dim=0).to(device)
+
+# e = shap.DeepExplainer(model, tests)
+# shap_values = e.shap_values(tests)
+# shap.summary_plot(shap_values=shap_values, features=tests, feature_names=features, max_display=10)
+# # plt.savefig("ShapPlot.jpg")
+# plt.clf()
