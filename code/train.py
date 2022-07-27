@@ -34,7 +34,7 @@ if device.type == "cuda":
 	torch.backends.cudnn.deterministic = True
 	torch.backends.cudnn.benchmark = False
 
-train_dataset, valid_dataset, test_dataset, features, test_data = load_dataset(PATH_FILE, MODEL_TYPE)
+train_dataset, valid_dataset, test_dataset, features, test_data, cls_num_list = load_dataset(PATH_FILE, MODEL_TYPE)
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
 valid_loader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
@@ -50,11 +50,9 @@ elif MODEL_TYPE == 'CNN':
 else:
 	raise AssertionError("Wrong Model Type!")
 
-cls_num_list = [18930, 5297, 22783, 14090, 10341]
-
 criterion = nn.CrossEntropyLoss()
 #criterion = FocalLoss(weight=reweight(cls_num_list), gamma=1)
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay = 0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay = 0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)

@@ -40,10 +40,12 @@ def plot_confusion_matrix(results, class_names):
 
   prec = []
   rec = []
+  acc = []
 
   for i in range(5):
       prec.append(cm[i,i]/np.sum(cm[:,i]))
       rec.append(cm[i,i]/np.sum(cm[i,:]))
+      acc.append((cm[i,i] + np.sum(np.delete(np.delete(cm, i, axis=0), i, axis=1)))/np.sum(cm))
 
   prec = np.array(prec)
   rec = np.array(rec)
@@ -55,7 +57,7 @@ def plot_confusion_matrix(results, class_names):
   plt.show()
 
   #Display results table
-  df = pd.DataFrame({'Labels': class_names, 'Precision': prec, 'Recall': rec, 'F1-score': f1})
+  df = pd.DataFrame({'Labels': class_names, 'Accuracy': acc, 'Precision': prec, 'Recall': rec, 'F1-score': f1, 'Count': np.bincount(y_true)})
   display(df.round(3))
 
   pass

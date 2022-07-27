@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
 import torch
 from torch.utils.data import TensorDataset, Dataset
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
 
 def load_dataset(path, model_type):
 
@@ -12,8 +14,15 @@ def load_dataset(path, model_type):
   data = df.loc[:, df.columns != 'SleepStage'].values
   target = df['SleepStage'].values
 
-  X_train, X_rem, y_train, y_rem = train_test_split(data, target, train_size=0.6)
+  X_train, X_rem, y_train, y_rem = train_test_split(data, target, train_size=0.8)
   X_valid, X_test, y_valid, y_test = train_test_split(X_rem, y_rem, test_size=0.5)
+
+  unique, counts = np.unique(y_train, return_counts=True)
+  D = dict(zip(unique, counts))
+  D[1] = int(0.3*max(D.values()))
+
+  smot = SMOTE(D, random_state=42)
+  X_train, y_train = smot.fit_resample(X_train, y_train)
 
   if model_type == 'MLP':
     train_dataset = TensorDataset(torch.Tensor(X_train), torch.Tensor(y_train))
@@ -26,4 +35,4 @@ def load_dataset(path, model_type):
   else:
     raise AssertionError("Wrong Model Type!")
 
-  return train_dataset, valid_dataset, test_dataset, features, torch.Tensor(X_test)
+  return train_dataset, valid_dataset, test_dataset, features, torch.Tensor(X_test), list(D.values())
