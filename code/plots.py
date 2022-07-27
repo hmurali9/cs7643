@@ -6,7 +6,7 @@ import pandas as pd
 
 def plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies):
 
-  fig, (ax1, ax2) = plt.subplots(1, 2)
+  fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
 
   ax1.plot(train_losses, label="Training Loss")
   ax1.plot(valid_losses, label="Validation Loss")
@@ -23,6 +23,7 @@ def plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_acc
   ax2.legend()
 
   plt.show()
+  fig.savefig('../output/MLP_Loss_Accuracy_Plots.svg', format='svg')
 
   pass
 
@@ -55,6 +56,7 @@ def plot_confusion_matrix(results, class_names):
   disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
   disp.plot()
   plt.show()
+  disp.figure_.savefig('../output/MLP_Confusion_Matrix.svg', format='svg')
 
   #Display results table
   df = pd.DataFrame({'Labels': class_names, 'Accuracy': acc, 'Precision': prec, 'Recall': rec, 'F1-score': f1, 'Count': np.bincount(y_true)})
