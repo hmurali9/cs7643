@@ -28,13 +28,14 @@ BATCH_SIZE = 512
 USE_CUDA = True  # Set 'True' if you want to use GPU
 NUM_WORKERS = 0  # Number of threads used by DataLoader. You can adjust this according to your machine spec.
 
-device = torch.device("cuda" if USE_CUDA and torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
+# device = torch.device("cuda" if USE_CUDA and torch.cuda.is_available() else "cpu")
 torch.manual_seed(1)
 if device.type == "cuda":
 	torch.backends.cudnn.deterministic = True
 	torch.backends.cudnn.benchmark = False
 
-train_dataset, valid_dataset, test_dataset, features, test_data, cls_num_list = load_dataset(PATH_FILE, MODEL_TYPE)
+train_dataset, valid_dataset, test_dataset, features, cls_num_list = load_dataset(PATH_FILE, MODEL_TYPE)
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
 valid_loader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
@@ -85,17 +86,11 @@ test_loss, test_accuracy, test_results = evaluate(best_model, device, test_loade
 class_names = ['Awake', 'N1', 'N2', 'N3', 'REM']
 plot_confusion_matrix(test_results, class_names)
 
-# test_data_new = []
+test_data, _ = next(iter(test_loader))
+background, tests = test_data, test_data
 
-# for i, (inp, target) in enumerate(test_loader):
-#   test_data_new.append(inp)
-
-# #SHAP computation
-
-# tests = torch.cat(test_data_new, dim=0).to(device)
-
-# e = shap.DeepExplainer(model, tests)
-# shap_values = e.shap_values(tests)
-# shap.summary_plot(shap_values=shap_values, features=tests, feature_names=features, max_display=10)
-# # plt.savefig("ShapPlot.jpg")
-# plt.clf()
+e = shap.DeepExplainer(model, background)
+shap_values = e.shap_values(tests)
+shap.summary_plot(shap_values=shap_values, features=tests, feature_names=features, max_display=10)
+plt.savefig('../output/MLP_SHAP_Plot.png')
+plt.clf()

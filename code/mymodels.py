@@ -4,13 +4,24 @@ import torch.nn as nn
 class MyMLP(nn.Module):
   def __init__(self):
     super(MyMLP, self).__init__()
-    self.hidden = nn.Linear(70, 16)
-    self.out = nn.Linear(16, 5)
-    self.ReLU = nn.LeakyReLU()
+    self.fc_layers = nn.Sequential(
+                nn.Linear(75, 256),
+                nn.ReLU(),
+                nn.Dropout(0.25),
+                nn.Linear(256, 128),
+                nn.ReLU(),
+                nn.Dropout(0.25),
+                nn.Linear(128, 64),
+                nn.ReLU(),
+                nn.Dropout(0.25),
+                nn.Linear(64, 32),
+                nn.ReLU(),
+                nn.Dropout(0.25),
+                nn.Linear(32, 5)
+            )
 
   def forward(self, x):
-    x = self.ReLU(self.hidden(x))
-    x = self.out(x)
+    x = self.fc_layers(x)
     return x
 
 

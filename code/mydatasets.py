@@ -9,7 +9,7 @@ def load_dataset(path, model_type):
 
   df = pd.read_csv(path)
 
-  features = df.columns.to_list()
+  features = df.columns.to_list()[1:]
 
   data = df.loc[:, df.columns != 'SleepStage'].values
   target = df['SleepStage'].values
@@ -19,7 +19,7 @@ def load_dataset(path, model_type):
 
   unique, counts = np.unique(y_train, return_counts=True)
   D = dict(zip(unique, counts))
-  D[1] = int(0.3*max(D.values()))
+  D[1] = int(0.4*max(D.values()))
 
   smot = SMOTE(D, random_state=42)
   X_train, y_train = smot.fit_resample(X_train, y_train)
@@ -35,4 +35,4 @@ def load_dataset(path, model_type):
   else:
     raise AssertionError("Wrong Model Type!")
 
-  return train_dataset, valid_dataset, test_dataset, features, torch.Tensor(X_test), list(D.values())
+  return train_dataset, valid_dataset, test_dataset, features, list(D.values())
